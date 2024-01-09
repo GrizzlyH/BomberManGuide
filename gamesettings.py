@@ -1,0 +1,3 @@
+#  Game Screen settings
+SCREENWIDTH = 1280
+SCREENHEIGHT = 892
