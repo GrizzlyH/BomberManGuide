@@ -6,38 +6,38 @@ import gamesettings as gs
 
 class BomberMan:
     def __init__(self):
-        pygame.init()   #  Init pygame module
+        pygame.init()
 
         self.screen = pygame.display.set_mode((gs.SCREENWIDTH, gs.SCREENHEIGHT))
         pygame.display.set_caption("BomberMan")
-        self.FPS = pygame.time.Clock()
 
-        self.assets = Assets()
-        self.game = Game(self, self.assets)
+        self.ASSETS = Assets()
+        self.GAME = Game(self, self.ASSETS)
+        self.FPS = pygame.time.Clock()
 
         self.run = True
 
 
     def input(self):
         #for event in pygame.event.get():
-            #if event.type == pygame.QUIT:
-                #self.run = False
-        self.game.input()
+        #    if event.type == pygame.QUIT:
+        #        self.run = False
+        self.GAME.input()
 
 
     def update(self):
-        self.FPS.tick(60)   #  The speed at which pygame will update each cycle
-        self.game.update()
+        self.FPS.tick(gs.FPS)
+        self.GAME.update()
 
 
     def draw(self, window):
-        window.fill((0, 0, 0))  #  Fill the screen with a black colour
-        self.game.draw(window)
+        window.fill(gs.BLACK)
+        self.GAME.draw(window)
         pygame.display.update()
 
 
     def rungame(self):
-        while self.run:
+        while self.run == True:
             self.input()
             self.update()
             self.draw(self.screen)

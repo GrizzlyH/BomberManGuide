@@ -1,34 +1,26 @@
 import pygame
-from character import Character
 import gamesettings as gs
 
 
 class Game:
     def __init__(self, main, assets):
-        #  Link with the Main and Assets Classes
+        #  Link with the main class and assets
         self.MAIN = main
         self.ASSETS = assets
 
-        self.player_group = pygame.sprite.Group()
-        self.player = Character(self, self.ASSETS.player_char, self.player_group, 0, 0, 64)
-
-
     def input(self):
-        #for event in pygame.event.get():
-        #    if event.type == pygame.QUIT:
-        #        self.quit_game()
-        self.player.input()
+        for event in pygame.event.get():
+            #  Check if red Cross has been clicked
+            if event.type == pygame.QUIT:
+                self.MAIN.run = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.MAIN.run = False
 
 
     def update(self):
-        self.player_group.update()
+        pass
 
 
     def draw(self, window):
-        window.fill((188, 188, 188))
-        self.player_group.draw(window)
-
-
-    def quit_game(self):
-        """"Access main Object Class and switch the Run boolean to False"""
-        self.MAIN.run = False
+        pass
