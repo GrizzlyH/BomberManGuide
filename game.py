@@ -1,4 +1,5 @@
 import pygame
+from character import Character
 import gamesettings as gs
 
 
@@ -8,19 +9,23 @@ class Game:
         self.MAIN = main
         self.ASSETS = assets
 
+        self.player = Character(self, self.ASSETS.player_char)
+
+
     def input(self):
-        for event in pygame.event.get():
-            #  Check if red Cross has been clicked
-            if event.type == pygame.QUIT:
-                self.MAIN.run = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.MAIN.run = False
+        #for event in pygame.event.get():
+        #    #  Check if red Cross has been clicked
+        #    if event.type == pygame.QUIT:
+        #        self.MAIN.run = False
+        #    elif event.type == pygame.KEYDOWN:
+        #        if event.key == pygame.K_ESCAPE:
+        #            self.MAIN.run = False
+        self.player.input()
 
 
     def update(self):
-        pass
+        self.player.update()
 
 
     def draw(self, window):
-        pass
+        self.player.draw(window)
