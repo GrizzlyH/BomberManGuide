@@ -5,6 +5,9 @@ SCREENHEIGHT = 892
 #  Game Frames per Second
 FPS = 60
 
+#  Y Coordinates Offset
+Y_OFFSET = 92
+
 #  Game Matrix
 SIZE = 64
 ROWS = 12

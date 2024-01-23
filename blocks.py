@@ -6,6 +6,7 @@ class Blocks(pygame.sprite.Sprite):
     def __init__(self, game, images, group, row_num, col_num, size):
         super().__init__(group)
         self.GAME = game
+        self.y_offset = gs.Y_OFFSET
 
         #  Position in level matrix
         self.row = row_num
@@ -16,7 +17,7 @@ class Blocks(pygame.sprite.Sprite):
 
         #  Coordinates of Block
         self.x = self.col * self.size
-        self.y = self.row * self.size
+        self.y = (self.row * self.size) + self.y_offset
 
         #  Attributes
         self.passable = False
@@ -43,3 +44,12 @@ class Blocks(pygame.sprite.Sprite):
 class Hard_Block(Blocks):
     def __init__(self, game, images, group, row_num, col_num, size):
         super().__init__(game, images, group, row_num, col_num, size)
+
+
+class Soft_Block(Blocks):
+    def __init__(self, game, images, group, row_num, col_num, size):
+        super().__init__(game, images, group, row_num, col_num, size)
+
+
+    def __repr__(self):
+        return "'@'"
