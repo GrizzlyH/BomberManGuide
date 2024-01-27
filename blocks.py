@@ -20,7 +20,7 @@ class Blocks(pygame.sprite.Sprite):
         self.y = (self.row * self.size) + self.y_offset
 
         #  Attributes
-        self.passable = False
+        self.passable = True
 
         #  Block image
         self.image_list = images
