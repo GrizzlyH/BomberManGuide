@@ -33,8 +33,8 @@ class Blocks(pygame.sprite.Sprite):
         pass
 
 
-    def draw(self, window):
-        window.blit(self.image, self.rect)
+    def draw(self, window, offset):
+        window.blit(self.image, (self.rect.x - offset, self.rect.y))
 
 
     def __repr__(self):
