@@ -19,9 +19,15 @@ class Character(pygame.sprite.Sprite):
         #  Character Attributes
         self.alive = True
         self.speed = 3
+        self.bomb_limit = 1
+        self.remote = True
+        self.power = 1
 
         #  Character action
         self.action = "walk_left"
+
+        #  Bombs Planted
+        self.bombs_planted = 0
 
         #  Character Display
         self.index = 0
@@ -42,8 +48,12 @@ class Character(pygame.sprite.Sprite):
                     self.GAME.MAIN.run = False
                 elif event.key == pygame.K_SPACE:
                     row, col = ((self.rect.centery - gs.Y_OFFSET)//gs.SIZE, self.rect.centerx // self.size)
-                    if self.GAME.level_matrix[row][col] == "_":
-                        Bomb(self.GAME, self.GAME.ASSETS.bomb["bomb"], self.GAME.groups["bomb"], row, col, gs.SIZE)
+                    if self.GAME.level_matrix[row][col] == "_" and self.bombs_planted < self.bomb_limit:
+                        Bomb(self.GAME, self.GAME.ASSETS.bomb["bomb"],
+                             self.GAME.groups["bomb"], self.power, row, col, gs.SIZE, self.remote)
+                elif event.key == pygame.K_LCTRL and self.remote and self.GAME.groups["bomb"]:
+                    bomb_list = self.GAME.groups["bomb"].sprites()
+                    bomb_list[-1].explode()
 
         keys_pressed = pygame.key.get_pressed()
         if keys_pressed[pygame.K_d] or keys_pressed[pygame.K_RIGHT]:
@@ -111,6 +121,7 @@ class Character(pygame.sprite.Sprite):
         #  Check for collision between player and various items
         self.collision_detection_items(self.GAME.groups["hard_block"])
         self.collision_detection_items(self.GAME.groups["soft_block"])
+        self.collision_detection_items(self.GAME.groups["bomb"])
 
         #  Update the Game Camera X Pos with player x Position
         self.GAME.update_x_camera_offset_player_position(self.rect.x)
@@ -170,7 +181,7 @@ class Character(pygame.sprite.Sprite):
 
 
 class Bomb(pygame.sprite.Sprite):
-    def __init__(self, game, image_list, group, row_num, col_num, size):
+    def __init__(self, game, image_list, group, power, row_num, col_num, size, remote):
         super().__init__(group)
         self.GAME = game
 
@@ -186,6 +197,9 @@ class Bomb(pygame.sprite.Sprite):
         #  Bomb Attributes
         self.bomb_counter = 1
         self.bomb_timer = 12
+        self.passable = True
+        self.remote = remote
+        self.power = power
 
         #  image
         self.index = 0
@@ -204,6 +218,9 @@ class Bomb(pygame.sprite.Sprite):
 
     def update(self):
         self.animation()
+        self.planted_bomb_player_collision()
+        if self.bomb_counter == self.bomb_timer and not self.remote:
+            self.explode()
 
 
     def draw(self, window, offset):
@@ -213,9 +230,7 @@ class Bomb(pygame.sprite.Sprite):
     def insert_bomb_into_grid(self):
         """Adds the bomb object to the level matrix"""
         self.GAME.level_matrix[self.row][self.col] = self
-        print()
-        for row in self.GAME.level_matrix:
-            print(row)
+        self.GAME.player.bombs_planted += 1
 
 
     def animation(self):
@@ -224,7 +239,73 @@ class Bomb(pygame.sprite.Sprite):
             self.index = self.index % self.anim_length
             self.image = self.image_list[self.index]
             self.anim_timer = pygame.time.get_ticks()
+            self.bomb_counter += 1
+
+
+    def remove_bomb_from_grid(self):
+        """Removes the bomb object from the level matrix"""
+        self.GAME.level_matrix[self.row][self.col] = "_"
+        self.GAME.player.bombs_planted -= 1
+
+
+    def explode(self):
+        """Destroy the bomb, and remove from the level matrix"""
+        self.kill()
+        Explosion(self.GAME, self.GAME.ASSETS.explosions, "centre", self.power,
+                  self.GAME.groups["explosions"], self.row, self.col, self.size)
+        self.remove_bomb_from_grid()
+
+
+    def planted_bomb_player_collision(self):
+        if not self.passable:
+            return
+        if not self.rect.colliderect(self.GAME.player):
+            self.passable = False
 
 
     def __repr__(self):
         return "'!'"
+
+
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, game, image_dict, image_type, power, group, row_num, col_num, size):
+        super().__init__(group)
+        self.GAME = game
+
+        #  Level Matrix Position
+        self.row_num = row_num
+        self.col_num = col_num
+
+        #  Sprite Coordinates
+        self.size = size
+        self.y = (self.row_num * self.size) + gs.Y_OFFSET
+        self.x = self.col_num * self.size
+
+        #  Explosion IMage and animations
+        self.index = 0
+        self.anim_frame_time = 75
+        self.anim_timer = pygame.time.get_ticks()
+
+        self.image_dict = image_dict
+        self.image_type = image_type
+
+        self.image = self.image_dict[self.image_type][self.index]
+        self.rect = self.image.get_rect(topleft=(self.x, self.y))
+
+
+    def update(self):
+        self.animate()
+
+
+    def draw(self, window, x_offset):
+        window.blit(self.image, (self.rect.x - x_offset, self.rect.y))
+
+
+    def animate(self):
+        if pygame.time.get_ticks() - self.anim_timer >= self.anim_frame_time:
+            self.index += 1
+            if self.index == len(self.image_dict[self.image_type]):
+                self.kill()
+                return
+            self.image = self.image_dict[self.image_type][self.index]
+            self.anim_timer = pygame.time.get_ticks()
