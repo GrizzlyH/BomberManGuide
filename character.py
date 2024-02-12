@@ -323,7 +323,6 @@ class Explosion(pygame.sprite.Sprite):
         for power_cell in range(self.power):
             #  Get a list of the 4 directions, tuple of cell values
             directions = self.calculate_direction_cells(power_cell)
-            print(directions)
             #  Check the cells in each direction per the directions list above
             for ind, dir in enumerate(directions):
                 #  If the corrseponding direction in valid_directions list is False, skip
@@ -334,25 +333,22 @@ class Explosion(pygame.sprite.Sprite):
                 if self.GAME.level_matrix[dir[0]][dir[1]] == "_":
                     #  if the end of the power range, use the end piece
                     if power_cell == self.power - 1:
-                        print(f"explode {dir[0], dir[1]}, end_piece")
                         FireBall(self.image_dict[dir[4]], self.GAME.groups["explosions"], dir[0], dir[1], gs.SIZE)
                     #  Check if the next cell in sequence is a barrier, use end piece if true,
                     #  and change valid directions to False
                     elif self.GAME.level_matrix[dir[2]][dir[3]] in self.GAME.groups["hard_block"].sprites():
-                        print(f"explode {dir[0], dir[1]} end_piece")
                         FireBall(self.image_dict[dir[4]], self.GAME.groups["explosions"], dir[0], dir[1], gs.SIZE)
                         valid_directions[ind] = False
                     #  if next cell in sequence is not a barrier, and not the end of the flame power, use mid image
                     else:
                         FireBall(self.image_dict[dir[5]], self.GAME.groups["explosions"], dir[0], dir[1], gs.SIZE)
-                        print(f"explode {dir[0], dir[1]}, mid flame")
                 #  If the current cell being checked is not empty, but is a bomb, detonate the bomb
                 elif self.GAME.level_matrix[dir[0]][dir[1]] in self.GAME.groups["bomb"].sprites():
                     self.GAME.level_matrix[dir[0]][dir[1]].explode()
                     valid_directions[ind] = False
                 #  If the current cell being checked is not empty, but is a soft block - destroy it.
                 elif self.GAME.level_matrix[dir[0]][dir[1]] in self.GAME.groups["soft_block"].sprites():
-                    print(f"explode {dir[0], dir[1]} Destroy soft Block")
+                    self.GAME.level_matrix[dir[0]][dir[1]].destroy_soft_block()
                     valid_directions[ind] = False
                 #  If the current cell being checked is not empty, but is a special block
 
@@ -360,6 +356,7 @@ class Explosion(pygame.sprite.Sprite):
                 else:
                     valid_directions[ind] = False
                     continue
+
 
     def calculate_direction_cells(self, cell):
         """Returns a list of the four cells in the up and down, left and right directions"""
@@ -397,11 +394,14 @@ class FireBall(pygame.sprite.Sprite):
 
         self.passable = False
 
+
     def update(self):
         self.animate()
 
+
     def draw(self, window, x_offset):
         window.blit(self.image, (self.rect.x - x_offset, self.rect.y))
+
 
     def animate(self):
         if pygame.time.get_ticks() - self.anim_timer >= self.anim_frame_time:
