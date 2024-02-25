@@ -142,7 +142,7 @@ class Game:
 
     def insert_enemies_into_level(self, matrix):
         """Randomly insert enemies into the level, using level matrix for valid locations"""
-        enemies_list = ["onil" for i in range(10)]
+        enemies_list = ["pontan" for i in range(10)]
         #  Get grid coordinates of the player character
         pl_col = self.player.col_num
         pl_row = self.player.row_num

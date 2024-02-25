@@ -15,7 +15,7 @@ class Enemy(pygame.sprite.Sprite):
         self.wall_hack = gs.ENEMIES[self.type]["wall_hack"]  #  Enemy can move through walls
         self.chase_player = gs.ENEMIES[self.type]["chase_player"]   #  Enemy wil chase the player
         self.LoS = gs.ENEMIES[self.type]["LoS"] * size            #  Distance Enemy can see player
-        self.see_player_hack = gs.ENEMIES[self.type]["see_player_hack"] * size      #  Enemy can see player through walls
+        self.see_player_hack = gs.ENEMIES[self.type]["see_player_hack"]      #  Enemy can see player through walls
 
         #  Level Matrix spawn coordinates
         self.row = row_num
@@ -82,10 +82,25 @@ class Enemy(pygame.sprite.Sprite):
         self.new_direction(self.GAME.groups["hard_block"], move_direction, directions)
 
         #  Collision detection with the Soft Blocks
-        self.new_direction(self.GAME.groups["soft_block"], move_direction, directions)
+        if self.wall_hack == False:
+            self.new_direction(self.GAME.groups["soft_block"], move_direction, directions)
 
         #  Collision detection with the Bombs
         self.new_direction(self.GAME.groups["bomb"], move_direction, directions)
+
+        #  Chase the player if Applciable
+        if self.chase_player:
+            #  if Dist greater, pass
+            if self.check_LoS_distance():
+                pass
+            elif self.intersecting_items_with_LoS("hard_block"):
+                pass
+            elif self.intersecting_items_with_LoS("soft_block") and self.see_player_hack == False:
+                pass
+            elif self.intersecting_items_with_LoS("bomb") and self.see_player_hack == False:
+                pass
+            else:
+                self.chase_the_player()
 
         #  Perform a change of direction if sufficient amount of time has elapsed
         self.change_directions(directions)
@@ -142,7 +157,8 @@ class Enemy(pygame.sprite.Sprite):
             return
 
         #  Check the 4 directions to see if movement is possible, update the directions list
-        self.determine_if_direction_valid(direction_list, row, col)
+        if self.wall_hack == False:
+            self.determine_if_direction_valid(direction_list, row, col)
 
         #  Randomly select a new direction from the remaining list of directions
         new_direction = choice(direction_list)
@@ -193,3 +209,43 @@ class Enemy(pygame.sprite.Sprite):
         """Update the positions of the enemy and player characters"""
         self.start_pos = self.rect.center
         self.end_pos = self.GAME.player.rect.center
+
+
+    def chase_the_player(self):
+        """Change the direction towards the player if in line of sight"""
+        #  Convert pixel coords to rows/col
+        enemy_col = self.start_pos[0] // self.size
+        enemy_row = self.start_pos[1] // self.size
+        player_col = self.end_pos[0] // self.size
+        player_row = self.end_pos[1] // self.size
+
+        if enemy_col > player_col and ((self.y - gs.Y_OFFSET) % self.size) + 32 == self.size//2:
+            self.action = "walk_left"
+        elif enemy_col < player_col and ((self.y - gs.Y_OFFSET) % self.size) + 32 == self.size//2:
+            self.action = "walk_right"
+        elif enemy_row > player_row and (self.x % self.size) + 32 == self.size//2:
+            self.action = "walk_up"
+        elif enemy_row < player_row and (self.x % self.size) + 32 == self.size//2:
+            self.action = "walk_down"
+
+            #  Update the enemy char change direction timer
+            self.change_dir_timer = pygame.time.get_ticks()
+
+
+    def check_LoS_distance(self):
+        """Return a True or False, if dist between player and enemy is less than LoS attribute"""
+        x_dist = abs(self.end_pos[0] - self.start_pos[0])
+        y_dist = abs(self.end_pos[1] - self.start_pos[1])
+
+        if x_dist > self.LoS or y_dist > self.LoS:
+            return True
+
+        return False
+
+
+    def intersecting_items_with_LoS(self, group):
+        """Return True or False, if item obstructing LoS"""
+        for item in self.GAME.groups[group]:
+            if item.rect.clipline(self.start_pos, self.end_pos):
+                return True
+        return False
