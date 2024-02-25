@@ -8,6 +8,10 @@ FPS = 60
 #  Y Coordinates Offset
 Y_OFFSET = 92
 
+#  Enemy Attributes
+ENEMIES = {"ballom": {"speed": 1, "wall_hack": False, "chase_player": False, "LoS": 0, "see_player_hack": False},
+           "onil": {"speed": 2, "wall_hack": False, "chase_player": True, "LoS": 4, "see_player_hack": False}}
+
 #  Game Matrix
 SIZE = 64
 ROWS = 12
@@ -44,3 +48,8 @@ BALLOM = {"walk_right": [(5, 0), (5, 1), (5, 2)],
           "walk_left": [(5, 3), (5, 4), (5, 5)],
           "walk_up": [(5, 3), (5, 4), (5, 5)],
           "death": [(5, 6), (5, 7), (5, 8), (5, 9), (5, 10)]}
+ONIL = {"walk_right": [(8, 0), (8, 1), (8, 2)],
+          "walk_down": [(8, 0), (8, 1), (8, 2)],
+          "walk_left": [(8, 3), (8, 4), (8, 5)],
+          "walk_up": [(8, 3), (8, 4), (8, 5)],
+          "death": [(8, 6), (8, 7), (8, 8), (8, 9), (8, 10)]}
