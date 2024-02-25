@@ -56,6 +56,19 @@ class Game:
             for item in value:
                 item.update()
 
+        # Perform enemy collision check with explosions, only if there is an explosion
+        if self.groups["explosions"]:
+            #  Compare explosions group with the enemies group, check for collisions. This will return a dictionary
+            #  keys: group 1, values: list of all group 2 that collision detection occurs
+            killed_enemies = pygame.sprite.groupcollide(self.groups["explosions"], self.groups["enemies"], False, False)
+            if killed_enemies:
+                #  Cycle through the dictionary, preforming checks on each enemy colliding with a flame
+                for flame, enemies in killed_enemies.items():
+                    #  Cycle through each enemy in the dictionary values(list)
+                    for enemy in enemies:
+                        if pygame.sprite.collide_mask(flame, enemy):
+                            enemy.destroy()
+
 
     def draw(self, window):
         #  Fill the background
