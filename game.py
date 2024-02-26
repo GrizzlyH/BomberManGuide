@@ -32,7 +32,7 @@ class Game:
         self.player = Character(self, self.ASSETS.player_char, self.groups["player"], 3, 2, gs.SIZE)
 
         #  Level Information
-        self.level = 1
+        self.level = 45
         self.level_matrix = self.generate_level_matrix(gs.ROWS, gs.COLS)
 
 
@@ -142,7 +142,8 @@ class Game:
 
     def insert_enemies_into_level(self, matrix):
         """Randomly insert enemies into the level, using level matrix for valid locations"""
-        enemies_list = ["pontan" for i in range(10)]
+        enemies_list = self.select_enemies_to_spawn()
+        print(enemies_list)
         #  Get grid coordinates of the player character
         pl_col = self.player.col_num
         pl_row = self.player.row_num
@@ -164,3 +165,50 @@ class Game:
                     Enemy(self, self.ASSETS.enemies[enemy], self.groups["enemies"], enemy, row, col, gs.SIZE)
                 else:
                     continue
+
+
+    def regenerate_stage(self):
+        """Restart a stage/level"""
+        #  Clear all objects from the various pygame groups, EXCEPT the player
+        for key in self.groups.keys():
+            if key == "player":
+                continue
+            self.groups[key].empty()
+
+        #  Clear the level matrix
+        self.level_matrix.clear()
+        self.level_matrix = self.generate_level_matrix(gs.ROWS, gs.COLS)
+
+        #  Reset the camera x Position back to zero
+        self.camera_x_offset = 0
+
+
+    def select_enemies_to_spawn(self):
+        """Generate a list of enemies to spawn"""
+        enemies_list = []
+        enemies = {0: "ballom", 1: "ballom", 2: "onil", 3: "dahl", 4: "minvo", 5: "doria",
+                   6: "ovape", 7: "pass", 8: "pontan"}
+
+        if self.level <= 8:
+            self.add_enemies_to_list(8, 2, 0, enemies, enemies_list)
+        elif self.level <= 17:
+            self.add_enemies_to_list(7, 2, 1, enemies, enemies_list)
+        elif self.level <= 26:
+            self.add_enemies_to_list(6, 3, 1, enemies, enemies_list)
+        elif self.level <= 35:
+            self.add_enemies_to_list(5, 3, 2, enemies, enemies_list)
+        elif self.level <= 45:
+            self.add_enemies_to_list(4, 4, 2, enemies, enemies_list)
+        else:
+            self.add_enemies_to_list(3, 4, 4, enemies, enemies_list)
+        return enemies_list
+
+
+    def add_enemies_to_list(self, num_1, num_2, num_3, enemies, enemies_list):
+        for num in range(num_1):
+            enemies_list.append("ballom")
+        for num in range(num_2):
+            enemies_list.append(enemies[(self.level % 9)])
+        for num in range(num_3):
+            enemies_list.append(choice(list(enemies.values())))
+        return

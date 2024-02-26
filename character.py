@@ -12,30 +12,9 @@ class Character(pygame.sprite.Sprite):
         self.col_num = col_num
         self.size = size
 
-        #  Character position
-        self.x = self.col_num * self.size
-        self.y = (self.row_num * self.size) + gs.Y_OFFSET
+        self.set_player(image_dict)
 
-        #  Character Attributes
-        self.alive = True
-        self.speed = 3
-        self.bomb_limit = 2
-        self.remote = True
-        self.power = 2
-
-        #  Character action
-        self.action = "walk_left"
-
-        #  Bombs Planted
-        self.bombs_planted = 0
-
-        #  Character Display
-        self.index = 0
-        self.anim_time = 50
-        self.anim_time_set = pygame.time.get_ticks()
-        self.image_dict = image_dict
-        self.image = self.image_dict[self.action][self.index]
-        self.rect = self.image.get_rect(topleft=(self.x, self.y))
+        self.lives = 3
 
 
     def input(self):
@@ -67,7 +46,16 @@ class Character(pygame.sprite.Sprite):
 
 
     def update(self):
-        pass
+        #  If there are flame/explosions, then perform a collision check
+        if len(self.GAME.groups["explosions"]) > 0:
+            self.deadly_collisions(self.GAME.groups["explosions"])
+
+        #  Perform collision detection with enemies
+        self.deadly_collisions(self.GAME.groups["enemies"])
+
+        #  play death animation
+        if self.action == "dead_anim":
+            self.animate(self.action)
 
 
     def draw(self, window, offset):
@@ -81,6 +69,9 @@ class Character(pygame.sprite.Sprite):
             self.index += 1
             if self.index == len(self.image_dict[action]):
                 self.index = 0
+                if self.action == "dead_anim":
+                    self.reset_player()
+                    return
             #  self.index = self.index % len(self.image_dics[action])
 
             self.image = self.image_dict[action][self.index]
@@ -178,6 +169,66 @@ class Character(pygame.sprite.Sprite):
             self.y = top_y
         elif self.y > bottom_y:
             self.y = bottom_y
+
+
+    def set_player_position(self):
+        """Character position"""
+        #  Character position
+        self.x = self.col_num * self.size
+        self.y = (self.row_num * self.size) + gs.Y_OFFSET
+
+
+    def set_player_images(self):
+        """Character images set"""
+        self.image = self.image_dict[self.action][self.index]
+        self.rect = self.image.get_rect(topleft=(self.x, self.y))
+
+
+    def set_player(self, image_dict):
+        """Character starting attributes"""
+        self.set_player_position()
+
+        #  Character Attributes
+        self.alive = True
+        self.speed = 3
+        self.bomb_limit = 2
+        self.remote = True
+        self.power = 2
+
+        #  Character action
+        self.action = "walk_right"
+
+        #  Bombs Planted
+        self.bombs_planted = 0
+
+        #  Character Display
+        self.index = 0
+        self.anim_time = 50
+        self.anim_time_set = pygame.time.get_ticks()
+        self.image_dict = image_dict
+        self.set_player_images()
+
+
+    def reset_player(self):
+        self.lives -= 1
+        if self.lives < 0:
+            self.GAME.MAIN.run = False
+            return
+        self.GAME.regenerate_stage()
+        self.set_player(self.image_dict)
+
+
+    def deadly_collisions(self, group):
+        if not self.alive:
+            return
+
+        for item in group:
+            if not self.rect.colliderect(item.rect):
+                continue
+            if pygame.sprite.collide_mask(self, item):
+                self.action = "dead_anim"
+                self.alive = False
+                return
 
 
 class Bomb(pygame.sprite.Sprite):
