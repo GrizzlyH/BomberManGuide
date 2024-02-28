@@ -47,7 +47,7 @@ class Character(pygame.sprite.Sprite):
 
     def update(self):
         #  If there are flame/explosions, then perform a collision check
-        if len(self.GAME.groups["explosions"]) > 0:
+        if len(self.GAME.groups["explosions"]) > 0 and self.flame_pass == False:
             self.deadly_collisions(self.GAME.groups["explosions"])
 
         #  Perform collision detection with enemies
@@ -111,8 +111,10 @@ class Character(pygame.sprite.Sprite):
 
         #  Check for collision between player and various items
         self.collision_detection_items(self.GAME.groups["hard_block"])
-        self.collision_detection_items(self.GAME.groups["soft_block"])
-        self.collision_detection_items(self.GAME.groups["bomb"])
+        if self.wall_hack == False:
+            self.collision_detection_items(self.GAME.groups["soft_block"])
+        if self.bomb_hack == False:
+            self.collision_detection_items(self.GAME.groups["bomb"])
 
         #  Update the Game Camera X Pos with player x Position
         self.GAME.update_x_camera_offset_player_position(self.rect.x)
@@ -192,8 +194,11 @@ class Character(pygame.sprite.Sprite):
         self.alive = True
         self.speed = 3
         self.bomb_limit = 2
-        self.remote = True
-        self.power = 2
+        self.remote = False
+        self.power = 1
+        self.wall_hack = False
+        self.bomb_hack = False
+        self.flame_pass = False
 
         #  Character action
         self.action = "walk_right"
