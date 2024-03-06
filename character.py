@@ -14,6 +14,7 @@ class Character(pygame.sprite.Sprite):
 
         self.set_player(image_dict)
 
+        self.score = 0
         self.lives = 3
 
 
@@ -46,16 +47,25 @@ class Character(pygame.sprite.Sprite):
 
 
     def update(self):
-        #  If there are flame/explosions, then perform a collision check
-        if len(self.GAME.groups["explosions"]) > 0 and self.flame_pass == False:
-            self.deadly_collisions(self.GAME.groups["explosions"])
+        if self.invincibility == False:
+            #  If there are flame/explosions, then perform a collision check
+            if len(self.GAME.groups["explosions"]) > 0 and self.flame_pass == False:
+                self.deadly_collisions(self.GAME.groups["explosions"])
 
-        #  Perform collision detection with enemies
-        self.deadly_collisions(self.GAME.groups["enemies"])
+            #  Perform collision detection with enemies
+            self.deadly_collisions(self.GAME.groups["enemies"])
 
         #  play death animation
         if self.action == "dead_anim":
             self.animate(self.action)
+
+        #  invincibility Timer countdown
+        if not self.invincibility:
+            return
+
+        if pygame.time.get_ticks() - self.invincibility_timer >= 20000:
+            self.invincibility = False
+            self.invincibility_timer = None
 
 
     def draw(self, window, offset):
@@ -194,11 +204,13 @@ class Character(pygame.sprite.Sprite):
         self.alive = True
         self.speed = 3
         self.bomb_limit = 2
-        self.remote = False
+        self.remote = True
         self.power = 1
-        self.wall_hack = False
-        self.bomb_hack = False
-        self.flame_pass = False
+        self.wall_hack = True
+        self.bomb_hack = True
+        self.flame_pass = True
+        self.invincibility = False
+        self.invincibility_timer = None
 
         #  Character action
         self.action = "walk_right"
@@ -217,7 +229,8 @@ class Character(pygame.sprite.Sprite):
     def reset_player(self):
         self.lives -= 1
         if self.lives < 0:
-            self.GAME.MAIN.run = False
+            self.GAME.game_on = False
+            #self.GAME.MAIN.run = False
             return
         self.GAME.regenerate_stage()
         self.set_player(self.image_dict)
@@ -234,6 +247,11 @@ class Character(pygame.sprite.Sprite):
                 self.action = "dead_anim"
                 self.alive = False
                 return
+
+
+    def update_score(self, score):
+        """Update the player score"""
+        self.score += score
 
 
 class Bomb(pygame.sprite.Sprite):
@@ -407,7 +425,9 @@ class Explosion(pygame.sprite.Sprite):
                     self.GAME.level_matrix[dir[0]][dir[1]].destroy_soft_block()
                     valid_directions[ind] = False
                 #  If the current cell being checked is not empty, but is a special block
-
+                elif self.GAME.level_matrix[dir[0]][dir[1]] in self.GAME.groups["specials"].sprites():
+                    self.GAME.level_matrix[dir[0]][dir[1]].hit_by_explosion()
+                    valid_directions[ind] = False
                 #  If the current cell being checked is not an empty cell, or a bomb, or a soft, or a special
                 else:
                     valid_directions[ind] = False

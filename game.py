@@ -3,6 +3,7 @@ from character import Character
 from enemy import Enemy
 from blocks import Hard_Block, Soft_Block, Special_Soft_Block
 from random import choice, randint
+from info_panel import InfoPanel
 import gamesettings as gs
 
 
@@ -27,15 +28,23 @@ class Game:
                        "specials": pygame.sprite.Group(),
                        "explosions": pygame.sprite.Group(),
                        "enemies": pygame.sprite.Group(),
-                       "player": pygame.sprite.Group()}
+                       "player": pygame.sprite.Group(),
+                       "scores": pygame.sprite.Group()}
 
         #  Player Character
-        self.player = Character(self, self.ASSETS.player_char, self.groups["player"], 3, 2, gs.SIZE)
+        #self.player = Character(self, self.ASSETS.player_char, self.groups["player"], 3, 2, gs.SIZE)
 
         #  Level Information
-        self.level = 1
-        self.level_special = self.select_a_special()
-        self.level_matrix = self.generate_level_matrix(gs.ROWS, gs.COLS)
+        #self.level = 1
+        #self.level_special = self.select_a_special()
+        #self.level_matrix = self.generate_level_matrix(gs.ROWS, gs.COLS)
+        #self.level_info = InfoPanel(self, self.ASSETS)
+
+        #  Game On Settings
+        self.game_on = False
+        self.point_position = [(480, 616), (480, 674)]
+        self.point_pos = 0
+        self.pointer_pos = self.point_position[self.point_pos]
 
 
     def input(self):
@@ -46,10 +55,39 @@ class Game:
         #    elif event.type == pygame.KEYDOWN:
         #        if event.key == pygame.K_ESCAPE:
         #            self.MAIN.run = False
+        if not self.game_on:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.MAIN.run = False
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        self.point_pos -= 1
+                        if self.point_pos < 0:
+                            self.point_pos = 1
+                    if event.key == pygame.K_DOWN:
+                        self.point_pos += 1
+                        if self.point_pos > 1:
+                            self.point_pos = 0
+                    self.pointer_pos = self.point_position[self.point_pos]
+
+                    if event.key == pygame.K_RETURN:
+                        if self.point_pos == 0:
+                            self.new_game()
+
+
+            return
+
         self.player.input()
 
 
     def update(self):
+        if not self.game_on:
+            return
+
+        #  Udpate the info panel
+        self.level_info.update()
+
         #self.hard_blocks.update()
         #self.soft_blocks.update()
         #self.player.update()
@@ -74,6 +112,14 @@ class Game:
     def draw(self, window):
         #  Fill the background
         window.fill(gs.GREY)
+
+        if not self.game_on:
+            window.blit(self.ASSETS.start_screen, (0, 0))
+            window.blit(self.ASSETS.start_screen_pointer, (self.pointer_pos))
+            return
+
+        #  Draw information panel to screen
+        self.level_info.draw(window)
 
         #  Draw the Green Background Squares
         for row_num, row in enumerate(self.level_matrix):
@@ -168,9 +214,9 @@ class Game:
             self.camera_x_offset = player_x_pos - 576
 
 
-    def insert_enemies_into_level(self, matrix):
+    def insert_enemies_into_level(self, matrix, enemies=None):
         """Randomly insert enemies into the level, using level matrix for valid locations"""
-        enemies_list = self.select_enemies_to_spawn()
+        enemies_list = self.select_enemies_to_spawn() if enemies == None else enemies
         print(enemies_list)
         #  Get grid coordinates of the player character
         pl_col = self.player.col_num
@@ -205,6 +251,7 @@ class Game:
 
         #  Clear the level matrix
         self.level_matrix.clear()
+        self.level_info.set_timer()
         self.level_matrix = self.generate_level_matrix(gs.ROWS, gs.COLS)
 
         #  Reset the camera x Position back to zero
@@ -266,3 +313,28 @@ class Game:
                 speciasl.remove("fire_up")
             power_up = choice(specials)
         return power_up
+
+
+    def new_stage(self):
+        """Increase the stage level number, and selects a new level special"""
+        self.level += 1
+        self.level_special = self.select_a_special()
+        self.player.set_player_position()
+        self.player.set_player_images()
+        self.regenerate_stage()
+        print(self.level)
+
+
+    def new_game(self):
+        for keys, values in self.groups.items():
+            self.groups[keys].empty()
+
+        #  Player Character
+        self.player = Character(self, self.ASSETS.player_char, self.groups["player"], 3, 2, gs.SIZE)
+
+        #  Level Information
+        self.game_on = True
+        self.level = 1
+        self.level_special = self.select_a_special()
+        self.level_matrix = self.generate_level_matrix(gs.ROWS, gs.COLS)
+        self.level_info = InfoPanel(self, self.ASSETS)

@@ -1,5 +1,6 @@
 import pygame
 import gamesettings as gs
+from info_panel import Scoring
 
 
 class Special(pygame.sprite.Sprite):
@@ -30,15 +31,22 @@ class Special(pygame.sprite.Sprite):
                                   "remote": self.remote_special,
                                   "bomb_pass": self.bomb_hack_special,
                                   "flame_pass": self.flame_pass_special,
-                                  "invincible": self.invincible_special}
+                                  "invincible": self.invincible_special,
+                                  "exit": self.end_stage}
+
+        self.score = 1000 if self.name == "exit" else 500
 
 
     def update(self):
         if self.GAME.player.rect.collidepoint(self.rect.center):
             #  Activate power up
             self.power_up_activate[self.name](self.GAME.player)
+            if self.name == "exit":
+                self.GAME.player.update_score(self.score)
+                return
             self.GAME.level_matrix[self.row][self.col] = "_"
             self.kill()
+            self.GAME.player.update_score(self.score)
             return
 
 
@@ -77,3 +85,19 @@ class Special(pygame.sprite.Sprite):
     def invincible_special(self, player):
         """Turn on the players invincibility"""
         player.invincibility = True
+        player.invincibility_timer = pygame.time.get_ticks()
+
+    def end_stage(self, player):
+        """End the level, and generate a new level"""
+        if len(self.GAME.groups["enemies"].sprites()) > 0:
+            return
+
+        self.GAME.new_stage()
+
+    def hit_by_explosion(self):
+        """Action to take is special item is hit by an explosion"""
+        enemies = []
+        for _ in range(10):
+            enemies.append(gs.SPECIAL_CONNECTIONS[self.name])
+
+        self.GAME.insert_enemies_into_level(self.GAME.level_matrix, enemies)
